@@ -16,6 +16,7 @@ similarityScore xss yss = sum [x * Map.findWithDefault 0 x freqMap | x <- xss]
   where
     freqMap = Map.fromAscListWith (+) [(y, 1) | y <- yss]
 
+main :: IO ()
 main = do
   (locationFilePath : _) <- getArgs
   (locs1, locs2) <- readLocationFile locationFilePath

@@ -7,10 +7,12 @@ readReportsFile filename = map (map read . words) . lines <$> readFile filename
 isSortedBy :: (Int -> Int -> Bool) -> [Int] -> Bool
 isSortedBy _ [] = True
 isSortedBy _ [_] = True
-isSortedBy pred xs = and $ zipWith pred xs (tail xs)
+isSortedBy op xs = and $ zipWith op xs (tail xs)
 
+allIncreasing :: [Int] -> Bool
 allIncreasing = isSortedBy (<)
 
+allDecreasing :: [Int] -> Bool
 allDecreasing = isSortedBy (>)
 
 leaveOneOut :: [Int] -> [[Int]]
@@ -32,6 +34,7 @@ isSafeReportWithProblemDamper levels = any isSafeReport $ leaveOneOut levels
 countSafeReports :: ([Int] -> Bool) -> [[Int]] -> Int
 countSafeReports reportValidator reports = length $ filter reportValidator reports
 
+main :: IO ()
 main = do
   (reportsFilePath : _) <- getArgs
   reports <- readReportsFile reportsFilePath

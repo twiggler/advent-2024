@@ -1,0 +1,27 @@
+cabal-version:   3.8
+name:            advent2025
+version:         0.1.0.0
+license:         NONE
+author:          12800443+twiggler@users.noreply.github.com
+maintainer:      Roel de Jong
+build-type:      Simple
+extra-doc-files: README.md
+
+common warnings
+    ghc-options: -Wall
+    default-extensions: ImportQualifiedPost
+
+executable 1
+    import:           warnings
+    main-is:          main.hs
+    build-depends:    base ^>=4.17.1.0,
+                      containers ^>=0.7
+    hs-source-dirs:   1
+    default-language: Haskell2010
+
+executable 2
+    import:           warnings
+    main-is:          main.hs
+    build-depends:    base ^>=4.17.1.0
+    hs-source-dirs:   2
+    default-language: Haskell2010
