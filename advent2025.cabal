@@ -25,3 +25,10 @@ executable 2
     build-depends:    base ^>=4.17.1.0
     hs-source-dirs:   2
     default-language: Haskell2010
+
+executable 3
+    import:           warnings
+    main-is:          main.hs
+    build-depends:    base ^>=4.17.1.0
+    hs-source-dirs:   3
+    default-language: Haskell2010
