@@ -29,8 +29,9 @@ executable 2
 executable 3
     import:           warnings
     main-is:          main.hs
+    other-modules:    Parsing
     build-depends:    base ^>=4.17.1.0
-    hs-source-dirs:   3
+    hs-source-dirs:   3, common
     default-language: Haskell2010
 
 executable 4
@@ -38,4 +39,14 @@ executable 4
     main-is:          main.hs
     build-depends:    base ^>=4.17.1.0
     hs-source-dirs:   4
+    default-language: Haskell2010
+
+executable 5
+    import:           warnings
+    main-is:          main.hs
+    other-modules:    Parsing
+    build-depends:    base ^>=4.17.1.0,
+                      containers ^>=0.7,  
+                      fgl ^>=5.8.3.0  
+    hs-source-dirs:   5, common
     default-language: Haskell2010

@@ -2,6 +2,7 @@ import Data.Char
 import Data.Functor
 import System.Environment
 import Text.ParserCombinators.ReadP
+import Parsing
 
 data Calculator = Calculator
   { acc :: Int,
@@ -54,13 +55,10 @@ memoryDump = many $ withRecovery instruction
   where
     instruction = mulInstruction +++ doInstruction +++ dontInstruction
 
-parseMemoryDumpFile :: String -> IO [Instruction]
-parseMemoryDumpFile filename = fst . last . readP_to_S memoryDump <$> readFile filename
-
 main :: IO ()
 main = do
   (memoryDumpFilePath : _) <- getArgs
-  instructions <- parseMemoryDumpFile memoryDumpFilePath
+  instructions <- parseFileWith memoryDump memoryDumpFilePath 
   let (Calculator enabledSum disabledSum _) = runProgram instructions
       totalSum = enabledSum + disabledSum
 
