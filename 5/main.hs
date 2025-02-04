@@ -1,7 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
 import Data.Char
-import Data.Functor
 import Data.Graph.Inductive.Graph
 import Data.Graph.Inductive.PatriciaTree
 import Data.Graph.Inductive.Query.DFS
@@ -17,9 +16,6 @@ data SleighManual = SleighManual [(Int, Int)] [[Int]]
 
 pageNumber :: ReadP Int
 pageNumber = read <$> munch1 isDigit
-
-eol :: ReadP ()
-eol = char '\n' $> ()
 
 pageOrderingRule :: ReadP (Int, Int)
 pageOrderingRule = (,) <$> pageNumber <*> (char '|' *> pageNumber)

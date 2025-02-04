@@ -9,44 +9,57 @@ extra-doc-files: README.md
 
 common warnings
     ghc-options: -Wall
-    default-extensions: ImportQualifiedPost
+    build-depends: base ^>=4.18.2.1
+    default-extensions: ImportQualifiedPost, DeriveFunctor, FlexibleInstances, TupleSections
+
+library
+    import:           warnings
+    exposed-modules:  Parsing, 
+                      Cursor
+    build-depends:    infinite-list ^>=0.1.2
+    hs-source-dirs:   common
+    default-language: Haskell2010
 
 executable 1
     import:           warnings
     main-is:          main.hs
-    build-depends:    base ^>=4.17.1.0,
-                      containers ^>=0.7
+    build-depends:    containers ^>=0.7
     hs-source-dirs:   1
     default-language: Haskell2010
 
 executable 2
     import:           warnings
     main-is:          main.hs
-    build-depends:    base ^>=4.17.1.0
     hs-source-dirs:   2
     default-language: Haskell2010
 
 executable 3
     import:           warnings
     main-is:          main.hs
-    other-modules:    Parsing
-    build-depends:    base ^>=4.17.1.0
-    hs-source-dirs:   3, common
+    build-depends:    advent2025
+    hs-source-dirs:   3
     default-language: Haskell2010
 
 executable 4
     import:           warnings
     main-is:          main.hs
-    build-depends:    base ^>=4.17.1.0
     hs-source-dirs:   4
     default-language: Haskell2010
 
 executable 5
     import:           warnings
     main-is:          main.hs
-    other-modules:    Parsing
-    build-depends:    base ^>=4.17.1.0,
-                      containers ^>=0.7,  
-                      fgl ^>=5.8.3.0  
-    hs-source-dirs:   5, common
+    build-depends:    containers ^>=0.7,  
+                      fgl ^>=5.8.3.0,
+                      advent2025  
+    hs-source-dirs:   5
+    default-language: Haskell2010
+
+executable 6
+    import:           warnings
+    main-is:          main.hs
+    build-depends:    infinite-list ^>=0.1.2,
+                      containers ^>=0.7,
+                      advent2025
+    hs-source-dirs:   6
     default-language: Haskell2010
