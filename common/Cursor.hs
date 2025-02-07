@@ -4,8 +4,8 @@ module Cursor
     moveFwd,
     moveBwd,
     mapRows,
-    extract,
     extractGrid,
+    updateGrid
   )
 where
 
@@ -26,6 +26,9 @@ moveBwd (Cursor (bwd' :< prev') cur' fwd') = Cursor prev' bwd' (cur' :< fwd')
 extract :: Cursor a -> a
 extract (Cursor _ cur' _) = cur'
 
+update :: (a -> a) -> Cursor a -> Cursor a
+update f (Cursor bwd' cur' fwd') = Cursor bwd' (f cur') fwd'
+
 type Grid a = Compose Cursor Cursor a
 
 mapRows :: (Cursor a -> Cursor a) -> Grid a -> Grid a
@@ -33,3 +36,6 @@ mapRows f (Compose (Cursor bwd' cur' fwd')) = Compose $ Cursor (f <$> bwd') (f c
 
 extractGrid :: Grid a -> a
 extractGrid (Compose (Cursor _ cur' _)) = extract cur'
+
+updateGrid :: (a -> a) -> Grid a -> Grid a
+updateGrid f (Compose cursor) = Compose $ update (update f) cursor
