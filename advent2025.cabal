@@ -82,3 +82,11 @@ executable 7
                       advent2025
     hs-source-dirs:   7
     default-language: Haskell2010
+
+executable 8
+    import:           warnings
+    main-is:          main.hs
+    build-depends:    linear ^>=1.23.1,
+                      advent2025
+    hs-source-dirs:   8
+    default-language: Haskell2010
