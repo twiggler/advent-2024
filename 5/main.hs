@@ -35,8 +35,9 @@ middle :: [Int] -> Maybe Int
 middle [] = Nothing
 middle zs = go zs zs
   where
-    go (_ : _ : xs) ~(_ : ys) = go xs ys
+    go (_ : _ : xs) (_ : ys) = go xs ys
     go _ (y : _) = Just y
+    go _ _ = Nothing
 
 orderUpdate :: [(Int, Int)] -> [Int] -> [Int]
 orderUpdate rules ordering = topsort graph
