@@ -14,6 +14,12 @@ module Cursor
     Dir (..),
     Dir2,
     CardinalDir (..),
+    cardinalDirs,
+    FocussedCursor,
+    FocussedGrid,
+    toFocussedGrid,
+    fromFocussedGrid,
+    focus
   )
 where
 
@@ -22,7 +28,7 @@ import Data.Distributive
 import Data.Functor.Compose
 import Data.List.Infinite (Infinite (..))
 import Data.List.Infinite qualified as I
-import Data.Maybe (isJust, fromJust)
+import Data.Maybe (fromJust, isJust)
 
 data Cursor a = Cursor {bwd :: Infinite a, cur :: a, fwd :: Infinite a} deriving (Functor)
 
@@ -48,6 +54,8 @@ instance Functor Grid where
 
 instance Comonad Grid where
   extract = extract . extract . getCursor
+
+  -- NOT fmap duplicate . duplicate, see https://bartoszmilewski.com/2025/01/
   duplicate =
     fmap (Grid . Compose) . (Grid . Compose) . fmap distribute . duplicate . fmap duplicate . getCursor
 
@@ -67,16 +75,18 @@ toPaddedGrid = mkGrid . toCur (pure Nothing) . fmap (toCur Nothing . fmap Just)
     rightPadded padding = foldr (:<) (pure padding)
 
 toMatrix :: PaddedGrid a -> [[a]]
-toMatrix = toList (not.null) . fmap (fmap fromJust . toList isJust)  . getCursor
+toMatrix = toList (not . null) . fmap (fmap fromJust . toList isJust) . getCursor
   where
-    toList p (Cursor bwd' cur' fwd') = reverse (I.takeWhile p bwd') ++ I.takeWhile p (cur':<fwd')
-
+    toList p (Cursor bwd' cur' fwd') = reverse (I.takeWhile p bwd') ++ I.takeWhile p (cur' :< fwd')
 
 data Dir = B | Z | F deriving (Show, Eq)
 
 type Dir2 = (Dir, Dir)
 
 data CardinalDir = North | East | South | West deriving (Eq, Show, Ord)
+
+cardinalDirs :: [Dir2]
+cardinalDirs = toDir <$> [North, East, South, West]
 
 toDir :: CardinalDir -> Dir2
 toDir North = (Z, B)
@@ -91,3 +101,25 @@ moveCursor F = moveFwd
 
 moveGrid :: Dir2 -> Grid a -> Grid a
 moveGrid (h, v) = mkGrid . moveCursor v . fmap (moveCursor h) . getCursor
+
+-- Cursor which is focussed on a Just value
+data FocussedCursor a = FocussedCursor (Infinite (Maybe a)) a (Infinite (Maybe a))
+
+-- A padded grid which is focussed on a Just value
+data FocussedGrid a = FocussedGrid (Infinite (Cursor (Maybe a))) (FocussedCursor a) (Infinite (Cursor (Maybe a)))
+
+toFocussedGrid :: PaddedGrid a -> Maybe (FocussedGrid a)
+toFocussedGrid g =
+  let (Cursor bwd' cur' fwd') = getCursor g
+      (Cursor bwd'' cur'' fwd'') = cur'
+   in case cur'' of
+        Just c -> Just $ FocussedGrid bwd' (FocussedCursor bwd'' c fwd'') fwd'
+        Nothing -> Nothing
+
+fromFocussedGrid :: FocussedGrid a -> PaddedGrid a
+fromFocussedGrid (FocussedGrid bwd' cur' fwd') =
+  let (FocussedCursor bwd'' cur'' fwd'') = cur'
+   in mkGrid $ Cursor bwd' (Cursor bwd'' (Just cur'') fwd'') fwd'
+
+focus :: FocussedGrid a -> a
+focus (FocussedGrid _ (FocussedCursor _ cur' _) _) = cur'

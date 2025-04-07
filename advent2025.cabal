@@ -103,3 +103,12 @@ executable 9
                       advent2025
     hs-source-dirs:   9
     default-language: Haskell2010
+
+executable 10
+    import:           warnings
+    main-is:          main.hs
+    build-depends:    comonad ^>=5.0.9,
+                      containers ^>=0.7,
+                      advent2025
+    hs-source-dirs:   10
+    default-language: Haskell2010
