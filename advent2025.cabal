@@ -112,3 +112,13 @@ executable 10
                       advent2025
     hs-source-dirs:   10
     default-language: Haskell2010
+
+executable 11
+    import:           warnings
+    main-is:          main.hs
+    build-depends:    integer-logarithms ^>=1.0.4,
+                      advent2025,
+                      vector-sized ^>=1.6.1,
+                      finite-typelits ^>=0.2.1.0,
+    hs-source-dirs:   11
+    default-language: Haskell2010

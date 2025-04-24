@@ -12,7 +12,7 @@ import Data.Char (isDigit)
 parseFileWith :: ReadP p -> String -> IO p
 parseFileWith parser filename = fst . last . readP_to_S parser <$> readFile filename
 
-number :: ReadP Int
+number :: (Integral a, Read a) => ReadP a
 number = read <$> munch1 isDigit
 
 eol :: ReadP ()
