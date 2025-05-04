@@ -6,6 +6,7 @@ module Cursor
     moveBwd,
     moveCursor,
     moveGrid,
+    neighbors,
     mkGrid,
     toPaddedGrid,
     toMatrix,
@@ -28,7 +29,7 @@ import Data.Distributive
 import Data.Functor.Compose
 import Data.List.Infinite (Infinite (..))
 import Data.List.Infinite qualified as I
-import Data.Maybe (fromJust, isJust)
+import Data.Maybe ( fromJust, isJust, mapMaybe )
 
 data Cursor a = Cursor {bwd :: Infinite a, cur :: a, fwd :: Infinite a} deriving (Functor)
 
@@ -101,6 +102,11 @@ moveCursor F = moveFwd
 
 moveGrid :: Dir2 -> Grid a -> Grid a
 moveGrid (h, v) = mkGrid . moveCursor v . fmap (moveCursor h) . getCursor
+
+neighbors :: PaddedGrid a -> Maybe [a]
+neighbors grid = case extract grid of
+  Just _ -> Just $ mapMaybe (extract . (`moveGrid` grid)) cardinalDirs
+  Nothing -> Nothing
 
 -- Cursor which is focussed on a Just value
 data FocussedCursor a = FocussedCursor (Infinite (Maybe a)) a (Infinite (Maybe a))

@@ -7,6 +7,7 @@ import GHC.Base (ord)
 import Linear.V2
 import Linear.Vector ((^*))
 import System.Environment (getArgs)
+import Parsing (readLines)
 
 data Antenna = Antenna
   { pos :: V2 Int,
@@ -21,9 +22,6 @@ data City = City
   deriving (Show)
 
 type ResonanceModel = Int -> V2 Int -> V2 Int -> [V2 Int]
-
-readCityMap :: String -> IO [String]
-readCityMap = fmap lines . readFile
 
 makeCity :: [String] -> City
 makeCity cityMap =
@@ -57,7 +55,7 @@ antinodes model (City antennas' dim') = length $ nubOrd $ concatMap searchFreq (
 main :: IO ()
 main = do
   (mapFile : _) <- getArgs
-  antennaMap <- readCityMap mapFile
+  antennaMap <- readLines mapFile
   let city = makeCity antennaMap
       numberOfAntinodes1 = antinodes model1 city
       numberOfAntinodes2 = antinodes model2 city
