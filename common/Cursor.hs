@@ -12,6 +12,8 @@ module Cursor
     toMatrix,
     getCursor,
     toDir,
+    reverseDir,
+    reverseDir2,
     Dir (..),
     Dir2,
     CardinalDir (..),
@@ -95,6 +97,14 @@ toDir East = (F, Z)
 toDir South = (Z, F)
 toDir West = (B, Z)
 
+reverseDir :: Dir -> Dir
+reverseDir B = F
+reverseDir Z = Z
+reverseDir F = B
+
+reverseDir2 :: Dir2 -> Dir2
+reverseDir2 (h, v) = (reverseDir h, reverseDir v)
+
 moveCursor :: Dir -> Cursor a -> Cursor a
 moveCursor B = moveBwd
 moveCursor Z = id
@@ -103,10 +113,12 @@ moveCursor F = moveFwd
 moveGrid :: Dir2 -> Grid a -> Grid a
 moveGrid (h, v) = mkGrid . moveCursor v . fmap (moveCursor h) . getCursor
 
-neighbors :: PaddedGrid a -> Maybe [a]
+neighbors :: PaddedGrid a -> Maybe [(Dir2, a)]
 neighbors grid = case extract grid of
-  Just _ -> Just $ mapMaybe (extract . (`moveGrid` grid)) cardinalDirs
+  Just _ -> Just $ mapMaybe move cardinalDirs
   Nothing -> Nothing
+  where
+    move d = fmap (d,) . extract $ moveGrid d grid
 
 -- Cursor which is focussed on a Just value
 data FocussedCursor a = FocussedCursor (Infinite (Maybe a)) a (Infinite (Maybe a))

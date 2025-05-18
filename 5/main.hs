@@ -1,15 +1,13 @@
-{-# LANGUAGE TupleSections #-}
-
-import Data.Graph.Inductive.Graph
-import Data.Graph.Inductive.PatriciaTree
-import Data.Graph.Inductive.Query.DFS
-import Data.IntMap.Strict qualified as Map
-import Data.IntSet qualified as Set
-import Data.List
-import Data.Maybe
-import Parsing
-import System.Environment
-import Text.ParserCombinators.ReadP
+import Data.Graph.Inductive.Graph (mkUGraph)
+import Data.Graph.Inductive.PatriciaTree (Gr)
+import Data.Graph.Inductive.Query.DFS (topsort)
+import Data.IntMap.Strict qualified as Map (IntMap, fromList, lookup)
+import Data.IntSet qualified as Set (fromList, member)
+import Data.List (partition)
+import Data.Maybe (fromMaybe, mapMaybe)
+import Parsing (eol, number, parseFileWith)
+import System.Environment (getArgs)
+import Text.ParserCombinators.ReadP (ReadP, char, eof, sepBy, sepBy1)
 
 data SleighManual = SleighManual [(Int, Int)] [[Int]]
 
@@ -40,14 +38,11 @@ middle zs = go zs zs
     go _ _ = Nothing
 
 orderUpdate :: [(Int, Int)] -> [Int] -> [Int]
-orderUpdate rules ordering = topsort graph
-  where
-    nodes' = (,()) <$> ordering
-    activeRules =
-      let pageSet = Set.fromList ordering
-       in filter (\(x, y) -> Set.member x pageSet && Set.member y pageSet) rules
-    edges' = (\(x, y) -> (x, y, ())) <$> activeRules
-    graph = mkGraph nodes' edges' :: Gr () ()
+orderUpdate rules ordering =
+  let pageSet = Set.fromList ordering
+      activeRules = filter (\(x, y) -> Set.member x pageSet && Set.member y pageSet) rules
+      graph = mkUGraph ordering activeRules :: Gr () ()
+   in topsort graph
 
 sumOfUpdates :: SleighManual -> (Int, Int)
 sumOfUpdates (SleighManual rules updates) = (middleSum correctlyOrdered, middleSum reordered)
