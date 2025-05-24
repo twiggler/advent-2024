@@ -34,6 +34,7 @@ mkPlotGraph plantTypes =
    in mkGraph lNodes lEdges
   where
     edges = concatMap (\(from, tos) -> [(from, to, dir) | (dir, to) <- tos])
+    -- id inequality makes the graph directed
     isConnected (Plot t1 id1, Plot t2 id2, _) = t1 == t2 && id1 < id2
 
 fencingCosts :: PricingModel -> PlotGraph -> Int

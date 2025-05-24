@@ -2,13 +2,13 @@ module Parsing
   ( parseFileWith,
     eol,
     number,
-    readLines
+    readLines,
   )
 where
 
-import Data.Functor
-import Text.ParserCombinators.ReadP
 import Data.Char (isDigit)
+import Data.Functor (($>))
+import Text.ParserCombinators.ReadP (ReadP, char, munch1, readP_to_S)
 
 readLines :: String -> IO [String]
 readLines = fmap lines . readFile

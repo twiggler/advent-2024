@@ -131,3 +131,10 @@ executable 12
                       advent2025
     hs-source-dirs:   12
     default-language: Haskell2010
+
+executable 13
+    import:           warnings
+    main-is:          main.hs
+    build-depends:    advent2025
+    hs-source-dirs:   13
+    default-language: Haskell2010
