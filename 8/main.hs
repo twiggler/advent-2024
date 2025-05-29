@@ -1,13 +1,12 @@
 import Control.Monad (join)
 import Data.Char (isAlphaNum)
-import Data.Containers.ListUtils
+import Data.Containers.ListUtils (nubOrd)
 import Data.IntMap qualified as M
 import Data.List (tails)
 import GHC.Base (ord)
-import Linear.V2
-import Linear.Vector ((^*))
-import System.Environment (getArgs)
+import Linear (V2 (..), (^*))
 import Parsing (readLines)
+import System.Environment (getArgs)
 
 data Antenna = Antenna
   { pos :: V2 Int,
