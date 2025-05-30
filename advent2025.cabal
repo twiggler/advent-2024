@@ -143,6 +143,7 @@ executable 14
     import:           warnings
     main-is:          main.hs
     build-depends:    advent2025,
-                      linear ^>=1.23.1
+                      linear ^>=1.23.1,
+                      ansi-terminal ^>=1.1.2,
     hs-source-dirs:   14
     default-language: Haskell2010
