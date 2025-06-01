@@ -26,11 +26,11 @@ module Cursor
   )
 where
 
-import Control.Comonad
-import Data.Distributive
-import Data.Functor.Compose
+import Control.Comonad ( Comonad(extract, duplicate) )
+import Data.Distributive ( Distributive(distribute) )
+import Data.Functor.Compose ( Compose(..) )
 import Data.List.Infinite (Infinite (..))
-import Data.List.Infinite qualified as I
+import Data.List.Infinite qualified as I (iterate, transpose, takeWhile)
 import Data.Maybe ( fromJust, isJust, mapMaybe )
 
 data Cursor a = Cursor {bwd :: Infinite a, cur :: a, fwd :: Infinite a} deriving (Functor)

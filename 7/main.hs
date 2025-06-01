@@ -1,9 +1,9 @@
 import Control.Monad (foldM)
 import Data.Maybe (mapMaybe)
 import Math.NumberTheory.Logarithms (integerLog10)
-import Parsing
+import Parsing (eol, number, parseFileWith)
 import System.Environment (getArgs)
-import Text.ParserCombinators.ReadP
+import Text.ParserCombinators.ReadP (ReadP, char, eof, sepBy, sepBy1, string)
 import Prelude hiding (concat)
 
 data Equation = Equation

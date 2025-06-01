@@ -1,50 +1,32 @@
-import Data.Bifunctor qualified as BF
+import AxisAligned (AlignedAxisMaps, Bounds, Coord2, addCoord, castRay, makeAlignedAxesMaps)
+import Control.Monad (join)
+import Cursor (CardinalDir (..))
 import Data.Containers.ListUtils (nubOrdOn)
 import Data.Functor (($>), (<&>))
-import Data.IntMap.Strict (IntMap)
-import Data.IntMap.Strict qualified as IM
-import Data.IntSet (IntSet)
-import Data.IntSet qualified as IS
-import Data.List qualified as L
+import Data.List qualified as L (find, zipWith, drop, zip, nub, unfoldr)
 import Data.List.NonEmpty (NonEmpty ((:|)))
-import Data.List.NonEmpty qualified as NE
+import Data.List.NonEmpty qualified as NE (last, tail, toList)
 import Data.Maybe (fromJust)
-import Data.Set qualified as S
-import Data.Tuple (swap)
-import Parsing
+import Data.Set qualified as S (empty, member, insert)
+import Parsing (grid, parseFileWith)
 import System.Environment (getArgs)
-import Text.ParserCombinators.ReadP
+import Text.ParserCombinators.ReadP (ReadP, char, choice, eof)
 
 data Cell = Empty | Obstruction | Start deriving (Show, Eq, Ord)
 
-data CardinalDir = North | East | South | West deriving (Eq, Show, Ord)
-
-type Coord2 = (Int, Int)
-
-type Bounds = Coord2
-
 type Coord2Dir = (Int, Int, CardinalDir)
 
-type AlignedAxisMaps = (IntMap IntSet, IntMap IntSet)
+data Lab = Lab Coord2Dir Bounds AlignedAxisMaps
+  deriving (Show)
 
-data Lab = Lab
-  { __ :: Coord2Dir,
-    ___ :: Bounds,
-    alignedAxesMaps :: AlignedAxisMaps
-  }
+cell :: ReadP Cell
+cell = choice [char '.' $> Empty, char '#' $> Obstruction, char '^' $> Start]
 
-readLabPlan :: ReadP [[Cell]]
-readLabPlan = do
-  firstRow <- manyTill cell' eol
-  let width = length firstRow
-  rest <- endBy (count width cell') eol <* eof
-  return (firstRow : rest)
-  where
-    cell' = choice [char '.' $> Empty, char '#' $> Obstruction, char '^' $> Start]
-
-makeLab :: [[Cell]] -> Lab
-makeLab cells =
-  let cellsWithCoords = withCoords cells
+-- Partial function, if the start cell is not found we crash
+makeLab :: Int -> [[Cell]] -> Lab
+makeLab width cells =
+  let coords = [(x, y) | y <- [0 ..], x <- [0 .. width - 1]]
+      cellsWithCoords = coords `zip` join cells
       obstacles = filterObstacles cellsWithCoords
       axisAlignedMaps = makeAlignedAxesMaps obstacles
       (sx, sy) = fromJust $ findStart cellsWithCoords
@@ -53,27 +35,6 @@ makeLab cells =
   where
     filterObstacles = fmap fst . filter ((== Obstruction) . snd)
     findStart = fmap fst . L.find ((== Start) . snd)
-
-withCoords :: [[Cell]] -> [(Coord2, Cell)]
-withCoords = concat . zipWith withCoordY [0 ..]
-  where
-    withCoordY y = zipWith (withCell y) [0 ..]
-    withCell y x c = ((x, y), c)
-
-makeAlignedAxesMaps :: [Coord2] -> AlignedAxisMaps
-makeAlignedAxesMaps cells =
-  let xByY = IM.fromListWith IS.union (keyValue swap cells)
-      yByX = IM.fromListWith IS.union (keyValue id cells)
-   in (xByY, yByX)
-  where
-    keyValue f = fmap (BF.second IS.singleton . f)
-
-castRay :: AlignedAxisMaps -> Coord2Dir -> Maybe Coord2Dir
-castRay (xByY, yByX) (x, y, dir) = case dir of
-  North -> IM.lookup x yByX >>= IS.lookupLT y >>= \y' -> Just (x, y' + 1, East)
-  East -> IM.lookup y xByY >>= IS.lookupGT x >>= \x' -> Just (x' - 1, y, South)
-  South -> IM.lookup x yByX >>= IS.lookupGT y >>= \y' -> Just (x, y' - 1, West)
-  West -> IM.lookup y xByY >>= IS.lookupLT x >>= \x' -> Just (x' + 1, y, North)
 
 extend :: Coord2Dir -> [Coord2Dir]
 extend (x, y, dir) = case dir of
@@ -92,9 +53,14 @@ patrol :: Coord2Dir -> AlignedAxisMaps -> NonEmpty Coord2Dir
 patrol start' cm =
   start' :| L.unfoldr step start'
   where
-    step pos = do
-      next <- castRay cm pos
+    step (x, y, dir) = do
+      next <- bounce dir <$> castRay cm (x, y) dir
       return (next, next)
+    bounce dir (x, y) = case dir of
+      North -> (x, y + 1, East)
+      East -> (x - 1, y, South)
+      South -> (x, y - 1, West)
+      West -> (x + 1, y, North)
 
 solve1 :: Lab -> [Coord2Dir]
 solve1 (Lab start' bounds' aam) =
@@ -113,20 +79,14 @@ isCycle = go S.empty
     go visited (x : xs) = S.member x visited || go (S.insert x visited) xs
 
 solve2 :: Lab -> [Coord2Dir] -> Int
-solve2 lab path =
+solve2 (Lab _ _ axesMaps) path =
   let candidatePositions = L.drop 1 path <&> toCoord2
       scenarios = nubOrdOn snd (L.zip path candidatePositions)
    in length $ filter (isCycle . NE.toList) (uncurry go <$> scenarios)
   where
     go start' (ox, oy) =
-      let patchedCm = addObstacle (alignedAxesMaps lab) (ox, oy)
-       in patrol start' patchedCm
-
-addObstacle :: AlignedAxisMaps -> Coord2 -> AlignedAxisMaps
-addObstacle (xByY, yByX) (x, y) =
-  let xByY' = IM.adjust (IS.insert x) y xByY
-      yByX' = IM.adjust (IS.insert y) x yByX
-   in (xByY', yByX')
+      let axesMaps' = addCoord (ox, oy) axesMaps
+       in patrol start' axesMaps'
 
 uniquePositions :: [Coord2Dir] -> Int
 uniquePositions = length . L.nub . fmap (\(x, y, _) -> (x, y))
@@ -134,8 +94,8 @@ uniquePositions = length . L.nub . fmap (\(x, y, _) -> (x, y))
 main :: IO ()
 main = do
   (labPlanFilePath : _) <- getArgs
-  labPlan <- parseFileWith readLabPlan labPlanFilePath
-  let lab = makeLab labPlan
+  (width, labPlan) <- parseFileWith (grid cell <* eof) labPlanFilePath
+  let lab = makeLab width labPlan
       initialPatrol = solve1 lab
       distinctPositions = uniquePositions initialPatrol
       obstaclesWithLoop = solve2 lab initialPatrol

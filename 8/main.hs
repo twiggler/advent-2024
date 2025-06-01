@@ -27,7 +27,7 @@ makeCity cityMap =
   let dim' = length cityMap
       coords = [V2 x y | x <- [0 .. dim' - 1], y <- [0 .. dim' - 1]]
       antennas' = filter (isAlphaNum . frequency) $ zipWith Antenna coords (join cityMap)
-   in City antennas' dim'
+   in City { antennas = antennas', dim = dim' }
 
 pairs :: [a] -> [(a, a)]
 pairs as = [(x, y) | x : ys <- tails as, y <- ys]

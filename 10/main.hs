@@ -19,7 +19,7 @@ readHeightData file = do
 mkTopoMap :: [[Int]] -> PaddedGrid Cell
 mkTopoMap = toPaddedGrid . zipWith (\y -> zipWith (tagCell y) [0 ..]) [0 ..]
   where
-    tagCell y x cell' = Cell cell' (x, y)
+    tagCell y x cell' = Cell { height = cell', id' = (x, y) }
 
 branch :: FocussedGrid Cell -> Int -> [FocussedGrid Cell]
 branch grid' h =
