@@ -3,11 +3,11 @@ import Control.Monad (join)
 import Cursor (CardinalDir (..))
 import Data.Containers.ListUtils (nubOrdOn)
 import Data.Functor (($>), (<&>))
-import Data.List qualified as L (find, zipWith, drop, zip, nub, unfoldr)
+import Data.List qualified as L (drop, find, nub, unfoldr, zip, zipWith)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.List.NonEmpty qualified as NE (last, tail, toList)
 import Data.Maybe (fromJust)
-import Data.Set qualified as S (empty, member, insert)
+import Data.Set qualified as S (empty, insert, member)
 import Parsing (grid, parseFileWith)
 import System.Environment (getArgs)
 import Text.ParserCombinators.ReadP (ReadP, char, choice, eof)
@@ -26,15 +26,11 @@ cell = choice [char '.' $> Empty, char '#' $> Obstruction, char '^' $> Start]
 makeLab :: Int -> [[Cell]] -> Lab
 makeLab width cells =
   let coords = [(x, y) | y <- [0 ..], x <- [0 .. width - 1]]
-      cellsWithCoords = coords `zip` join cells
-      obstacles = filterObstacles cellsWithCoords
-      axisAlignedMaps = makeAlignedAxesMaps obstacles
-      (sx, sy) = fromJust $ findStart cellsWithCoords
-      (bounds', _) = last cellsWithCoords
-   in Lab (sx, sy, North) bounds' axisAlignedMaps
-  where
-    filterObstacles = fmap fst . filter ((== Obstruction) . snd)
-    findStart = fmap fst . L.find ((== Start) . snd)
+      withCoords = coords `zip` join cells
+      obstacles = filter (\(_, c) -> c == Obstruction) withCoords
+      axisAlignedMaps = makeAlignedAxesMaps (fst <$> obstacles)
+      ((sx, sy), _) = fromJust $ L.find (\(_, c) -> c == Start) withCoords
+   in Lab (sx, sy, North) (width, width) axisAlignedMaps
 
 extend :: Coord2Dir -> [Coord2Dir]
 extend (x, y, dir) = case dir of

@@ -149,3 +149,11 @@ executable 14
                       ansi-terminal ^>=1.1.2,
     hs-source-dirs:   14
     default-language: Haskell2010
+
+executable 15
+    import:           warnings
+    main-is:          main.hs
+    build-depends:    advent2025,
+                      containers ^>=0.7
+    hs-source-dirs:   15
+    default-language: Haskell2010
