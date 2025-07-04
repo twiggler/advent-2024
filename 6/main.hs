@@ -12,7 +12,7 @@ import Data.List.NonEmpty qualified as Ne (last)
 import Data.Maybe (mapMaybe)
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Parsing
+import Parsing (eol, parseFileWith)
 import System.Environment
 import Text.ParserCombinators.ReadP
 import Control.Monad.Extra (unfoldM, liftMaybe)

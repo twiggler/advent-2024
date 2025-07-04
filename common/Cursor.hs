@@ -18,6 +18,8 @@ module Cursor
     Dir2,
     CardinalDir (..),
     cardinalDirs,
+    toVector,
+    toVector2,
     FocussedCursor,
     FocussedGrid,
     toFocussedGrid,
@@ -86,16 +88,25 @@ data Dir = B | Z | F deriving (Show, Eq)
 
 type Dir2 = (Dir, Dir)
 
-data CardinalDir = North | East | South | West deriving (Eq, Show, Ord)
+data CardinalDir = North | East | South | West deriving (Eq, Show, Ord, Enum, Bounded)
 
+-- TODO: Remove now CardinalDir is a Bounded Enum?
 cardinalDirs :: [Dir2]
-cardinalDirs = toDir <$> [North, East, South, West]
+cardinalDirs = toDir <$> [minBound .. maxBound]
 
 toDir :: CardinalDir -> Dir2
 toDir North = (Z, B)
 toDir East = (F, Z)
 toDir South = (Z, F)
 toDir West = (B, Z)
+
+toVector :: Dir -> Int
+toVector B = -1
+toVector Z = 0
+toVector F = 1
+
+toVector2 :: Dir2 -> (Int, Int)
+toVector2 (h, v) = (toVector h, toVector v)
 
 reverseDir :: Dir -> Dir
 reverseDir B = F
@@ -113,6 +124,7 @@ moveCursor F = moveFwd
 moveGrid :: Dir2 -> Grid a -> Grid a
 moveGrid (h, v) = mkGrid . moveCursor v . fmap (moveCursor h) . getCursor
 
+-- TODO:: change return type to Maybe [(CardinalDir, a)]
 neighbors :: PaddedGrid a -> Maybe [(Dir2, a)]
 neighbors grid = case extract grid of
   Just _ -> Just $ mapMaybe move cardinalDirs
