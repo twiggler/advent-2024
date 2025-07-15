@@ -5,13 +5,14 @@ module Parsing
     readLines,
     signedNumber,
     grid,
+    fromMaybe
   )
 where
 
 import Data.Char (isDigit)
 import Data.Functor (($>))
 import Text.ParserCombinators.ReadP (ReadP, (+++))
-import Text.ParserCombinators.ReadP qualified as P 
+import Text.ParserCombinators.ReadP qualified as P
 
 readLines :: String -> IO [String]
 readLines = fmap lines . readFile
@@ -31,9 +32,12 @@ signedNumber = read <$> ((:) <$> P.char '-' <*> digits) +++ digits
 eol :: ReadP ()
 eol = P.char '\n' $> ()
 
+fromMaybe :: Maybe a -> ReadP a
+fromMaybe = maybe P.pfail pure
+
 grid :: ReadP c -> ReadP (Int, [[c]])
 grid cellParser = do
   firstRow <- P.manyTill cellParser eol
   let width = length firstRow
-  rest <- P.endBy (P.count width cellParser) eol 
+  rest <- P.endBy (P.count width cellParser) eol
   return (width, firstRow : rest)
