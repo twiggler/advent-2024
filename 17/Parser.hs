@@ -30,7 +30,7 @@ machineConfiguration = do
         1 -> pure . SomeInstruction . Bxl . Literal $ operand
         2 -> SomeInstruction . Bst <$> combo operand
         3 -> pure . SomeInstruction . Jnz . Literal $ operand
-        4 -> pure . SomeInstruction . Bxc $ None
+        4 -> pure . SomeInstruction . Bxc . None $ operand  -- Save for reconstruction of words
         5 -> SomeInstruction . Out <$> combo operand
         6 -> SomeInstruction . Bdv <$> combo operand
         7 -> SomeInstruction . Cdv <$> combo operand

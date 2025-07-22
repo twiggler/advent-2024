@@ -13,18 +13,18 @@ import Control.Comonad (extract)
 import Control.Comonad.Store (Store)
 import Control.Comonad.Store qualified as S (ComonadStore (seeks), seek, store)
 import Control.Monad (when)
-import Control.Monad.State.Strict (State, evalState)
-import Control.Monad.State.Strict qualified as St (gets, modify)
-import Control.Monad.Writer.Strict (WriterT, execWriterT)
-import Control.Monad.Writer.Strict qualified as W (MonadWriter (tell))
+import Control.Monad.State.Lazy (State, evalState)
+import Control.Monad.State.Lazy qualified as St (gets, modify')
+import Control.Monad.Writer.Lazy (WriterT, execWriterT)
+import Control.Monad.Writer.Lazy qualified as W (MonadWriter (tell))
 import Data.Finite (getFinite)
 import Data.Maybe (isJust)
 import Data.Vector ((!?))
 import Data.Vector qualified as V (fromList)
 import Instruction (adv, bdv, bst, bxc, bxl, cdv, jnz, out)
-import Machine (Address, Combo (..), Instruction (..), MachineConfig (..), MonadMachineIO (..), MonadMachineRegisters (..), Operand (..), SomeInstruction (..))
+import Machine
 
-type InterpreterM = WriterT [Integer] (State Interpreter)
+type InterpreterM = WriterT [Word3] (State Interpreter)
 
 data Interpreter = Interpreter
   { registerA :: Integer,
@@ -40,9 +40,9 @@ instance MonadMachineRegisters MonadInterpreter where
   getRegisterA = MonadInterpreter $ St.gets registerA
   getRegisterB = MonadInterpreter $ St.gets registerB
   getRegisterC = MonadInterpreter $ St.gets registerC
-  setRegisterA x = MonadInterpreter $ St.modify (\m -> m {registerA = x})
-  setRegisterB x = MonadInterpreter $ St.modify (\m -> m {registerB = x})
-  setRegisterC x = MonadInterpreter $ St.modify (\m -> m {registerC = x})
+  setRegisterA x = MonadInterpreter $ St.modify' (\m -> m {registerA = x})
+  setRegisterB x = MonadInterpreter $ St.modify' (\m -> m {registerB = x})
+  setRegisterC x = MonadInterpreter $ St.modify' (\m -> m {registerC = x})
 
 instance MonadMachineIO MonadInterpreter where
   write x = MonadInterpreter $ W.tell [x]
@@ -51,10 +51,10 @@ peekInstruction :: MonadInterpreter (Maybe SomeInstruction)
 peekInstruction = MonadInterpreter $ St.gets (extract . program)
 
 bumpIp :: MonadInterpreter ()
-bumpIp = MonadInterpreter $ St.modify (\m -> m {program = S.seeks (+ 1) (program m)})
+bumpIp = MonadInterpreter $ St.modify' (\m -> m {program = S.seeks (+ 1) (program m)})
 
 setIp :: Address -> MonadInterpreter ()
-setIp ip = MonadInterpreter $ St.modify (\m -> m {program = S.seek (toInt ip) (program m)})
+setIp ip = MonadInterpreter $ St.modify' (\m -> m {program = S.seek (toInt ip) (program m)})
   where
     toInt = fromIntegral . getFinite
 
@@ -64,7 +64,7 @@ evalOperand (Combo RegB) = getRegisterB
 evalOperand (Combo RegC) = getRegisterC
 evalOperand (Combo (Lit l)) = return $ toInteger l
 evalOperand (Literal l) = return l
-evalOperand None = return ()
+evalOperand (None _) = return ()
 
 mkInterpreter :: MachineConfig -> Interpreter
 mkInterpreter (MachineConfig regA regB regC instructions') =
@@ -91,7 +91,7 @@ step = do
   where
     adjustIp = maybe bumpIp setIp
 
-run :: Interpreter -> [Integer]
+run :: Interpreter -> [Word3]
 run = evalState (execWriterT (runMonadInterpreter loop))
   where
-    loop = step >>= \result -> when result loop -- Check space leak
+    loop = step >>= \result -> when result loop -- Thunk buildup, but the output should be streamable
