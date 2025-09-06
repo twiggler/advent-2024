@@ -202,8 +202,10 @@ executable 19
     import:           warnings
     main-is:          main.hs
     build-depends:    advent2025,
+                      psqueues ^>=0.2.8.1,
                       search-algorithms ^>=0.3.3,
                       bytestring ^>=0.11.5.3,
                       bytestring-trie ^>=0.2.7.6,
+                      containers ^>=0.7
     hs-source-dirs:   19
     default-language: Haskell2010
