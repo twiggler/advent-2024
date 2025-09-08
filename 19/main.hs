@@ -1,15 +1,15 @@
 import Algorithm.Search (dfs)
-import Data.Bifunctor qualified as BF
+import Data.Bifunctor qualified as BF (second)
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 qualified as B (length, null, pack)
 import Data.Foldable (foldl')
 import Data.IntMap (IntMap)
 import Data.IntMap qualified as M (empty, insert, lookup)
 import Data.Maybe (mapMaybe)
-import Data.OrdPSQ (OrdPSQ)
-import Data.OrdPSQ qualified as PQ (alter, minView, singleton)
+import Data.OrdPSQ qualified as PQ (minView, singleton)
 import Data.Trie (Trie)
 import Data.Trie qualified as T (fromList, matches)
+import Maze (upsert)
 import Parsing (eol, parseFileWith)
 import System.Environment (getArgs)
 import Text.ParserCombinators.ReadP (ReadP, endBy1, eof, munch1, sepBy1, string)
@@ -31,11 +31,6 @@ mkOnsen patterns designs =
 
 neighbors :: Trie () -> ByteString -> [ByteString]
 neighbors patternTrie state = [remainder | (_, _, remainder) <- T.matches patternTrie state]
-
-upsert :: (Ord k, Ord p) => (p, v) -> ((p, v) -> (p, v)) -> k -> OrdPSQ k p v -> OrdPSQ k p v
-upsert initial update key queue = snd $ PQ.alter f key queue
-  where
-    f = ((),) . Just . maybe initial update
 
 -- Like Dijkstra's, but accumulating the number of paths to each node.
 -- This works because there are only edges to shorter strings.

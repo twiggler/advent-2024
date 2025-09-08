@@ -1,11 +1,11 @@
 import Algorithm.Search (bfs, pruning)
-import AxisAligned (Coord2)
 import Data.Array.IArray qualified as A (accumArray)
 import Data.Array.Unboxed (UArray, (!?))
 import Data.DisjointSet qualified as D (empty, equivalent, insert, representative, union)
 import Data.List qualified as L (drop, find, reverse, take, zip)
 import Data.Maybe (fromMaybe, isJust)
 import Data.Set qualified as S (difference, fromList)
+import Maze (Coord2, neighbors1)
 import Parsing (eol, number, parseFileWith)
 import System.Environment (getArgs)
 import Text.ParserCombinators.ReadP (ReadP, char, endBy, eof)
@@ -15,11 +15,8 @@ bytePositions = endBy bytePosition eol <* eof
   where
     bytePosition = (,) <$> (number <* char ',') <*> number
 
-neighbors :: Coord2 -> [Coord2]
-neighbors (x, y) = [(x + dx, y + dy) | dx <- [-1 .. 1], dy <- [-1 .. 1], abs dx + abs dy == 1]
-
 solve1 :: Int -> [Coord2] -> Maybe [Coord2]
-solve1 dim byteCoords = bfs (neighbors `pruning` corrupted) (== (dim, dim)) (0, 0)
+solve1 dim byteCoords = bfs (neighbors1 `pruning` corrupted) (== (dim, dim)) (0, 0)
   where
     memorySpace :: UArray Coord2 Bool
     memorySpace =
@@ -44,7 +41,7 @@ solve2 dim byteCoords =
       if isJust (D.representative neighbor ds) then D.union byte neighbor ds else ds
 
     addMemoryCell coord ds =
-      foldr (neighborUnion coord) (D.insert coord ds) (neighbors coord)
+      foldr (neighborUnion coord) (D.insert coord ds) (neighbors1 coord)
 
 main :: IO ()
 main = do

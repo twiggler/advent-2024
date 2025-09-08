@@ -1,24 +1,31 @@
 module Parsing
   ( parseFileWith,
+    parseFileWithSafe,
     eol,
     number,
     readLines,
     signedNumber,
     grid,
-    fromMaybe
+    fromMaybe,
   )
 where
 
 import Data.Char (isDigit)
 import Data.Functor (($>))
+import Data.Maybe (fromJust)
+import Safe (lastMay)
 import Text.ParserCombinators.ReadP (ReadP, (+++))
 import Text.ParserCombinators.ReadP qualified as P
 
 readLines :: String -> IO [String]
 readLines = fmap lines . readFile
 
+parseFileWithSafe :: ReadP p -> String -> IO (Maybe p)
+parseFileWithSafe parser filename =
+  (fmap fst <$> lastMay) . P.readP_to_S parser <$> readFile filename
+
 parseFileWith :: ReadP p -> String -> IO p
-parseFileWith parser filename = fst . last . P.readP_to_S parser <$> readFile filename
+parseFileWith parser filename = fromJust <$> parseFileWithSafe parser filename
 
 digits :: ReadP String
 digits = P.munch1 isDigit
