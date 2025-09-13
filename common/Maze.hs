@@ -7,19 +7,20 @@ module Maze
     upsert,
     neighbors,
     neighbors1,
+    isWall,
   )
 where
 
 import Control.Monad (join)
 import Data.Array (Array, array)
-import Data.Bifunctor qualified as BF (second)
+import Data.Array.IArray ((!?))
+import Data.Bifunctor (second)
 import Data.Functor (($>))
-import Data.List qualified as L (filter, zip)
 import Data.OrdPSQ (OrdPSQ)
-import Data.OrdPSQ qualified as PQ (alter)
+import Data.OrdPSQ qualified as PQ
 import Parsing (grid, parseFileWithSafe)
 import Text.ParserCombinators.ReadP (ReadP, eof)
-import Text.ParserCombinators.ReadP qualified as P (char, choice)
+import Text.ParserCombinators.ReadP qualified as P
 
 type MazeArray = Array Coord2 Cell
 
@@ -50,9 +51,9 @@ mazeParser =
 mkMaze :: Int -> [[RawCell]] -> Either String Maze
 mkMaze dim rawCells = do
   let coords = [(x, y) | y <- [0 .. dim - 1], x <- [0 .. dim - 1]]
-      assocs = coords `L.zip` join rawCells
-      startPositions = fst <$> L.filter ((== Start) . snd) assocs
-      endPositions = fst <$> L.filter ((== End) . snd) assocs
+      assocs = coords `zip` join rawCells
+      startPositions = fst <$> filter ((== Start) . snd) assocs
+      endPositions = fst <$> filter ((== End) . snd) assocs
 
   startPos <- case startPositions of
     [s] -> Right s
@@ -62,7 +63,7 @@ mkMaze dim rawCells = do
     [e] -> Right e
     _ -> Left "Maze must have exactly one end (E) position."
 
-  let mazeArray = array ((0, 0), (dim - 1, dim - 1)) (BF.second toCell <$> assocs)
+  let mazeArray = array ((0, 0), (dim - 1, dim - 1)) (second toCell <$> assocs)
   return $ Maze mazeArray startPos endPos
   where
     toCell REmpty = Empty
@@ -76,6 +77,7 @@ loadMaze path = do
   let rawMazeEither = maybe (Left "Maze parsing failed") Right rawMaze
   return $ rawMazeEither >>= uncurry mkMaze
 
+-- TODO: move to Search module.
 upsert :: (Ord k, Ord p) => (p, v) -> ((p, v) -> (p, v)) -> k -> OrdPSQ k p v -> OrdPSQ k p v
 upsert initial update key queue = snd $ PQ.alter f key queue
   where
@@ -87,3 +89,9 @@ neighbors r (x, y) =
 
 neighbors1 :: Coord2 -> [Coord2]
 neighbors1 = neighbors 1
+
+isWall :: MazeArray -> Coord2 -> Bool
+isWall maze coord = case maze !? coord of
+  Just Wall -> True
+  Just Empty -> False
+  Nothing -> True

@@ -1,10 +1,10 @@
 import Algorithm.Search (bfs, pruning)
-import Data.Array.IArray qualified as A (accumArray)
+import Data.Array.IArray qualified as A 
 import Data.Array.Unboxed (UArray, (!?))
-import Data.DisjointSet qualified as D (empty, equivalent, insert, representative, union)
-import Data.List qualified as L (drop, find, reverse, take, zip)
+import Data.DisjointSet qualified as D 
+import Data.List qualified as L 
 import Data.Maybe (fromMaybe, isJust)
-import Data.Set qualified as S (difference, fromList)
+import Data.Set qualified as S 
 import Maze (Coord2, neighbors1)
 import Parsing (eol, number, parseFileWith)
 import System.Environment (getArgs)
