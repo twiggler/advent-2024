@@ -1,9 +1,12 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Maze
   ( Maze (..),
     MazeArray,
     Coord2,
     Cell (..),
     loadMaze,
+    loadMazeSafe,
     upsert,
     neighbors,
     neighbors1,
@@ -71,11 +74,17 @@ mkMaze dim rawCells = do
     toCell Start = Empty
     toCell End = Empty
 
-loadMaze :: FilePath -> IO (Either String Maze)
-loadMaze path = do
+loadMazeSafe :: FilePath -> IO (Either String Maze)
+loadMazeSafe path = do
   rawMaze <- parseFileWithSafe (mazeParser <* eof) path
   let rawMazeEither = maybe (Left "Maze parsing failed") Right rawMaze
   return $ rawMazeEither >>= uncurry mkMaze
+
+loadMaze :: FilePath -> IO Maze
+loadMaze path =
+  loadMazeSafe path >>= \case
+    (Left err) -> error err
+    Right maze -> return maze
 
 -- TODO: move to Search module.
 upsert :: (Ord k, Ord p) => (p, v) -> ((p, v) -> (p, v)) -> k -> OrdPSQ k p v -> OrdPSQ k p v
@@ -85,7 +94,13 @@ upsert initial update key queue = snd $ PQ.alter f key queue
 
 neighbors :: Int -> Coord2 -> [Coord2]
 neighbors r (x, y) =
-  [(x + dx * r, y + dy * r) | dx <- [-1 .. 1], dy <- [-1 .. 1], abs dx + abs dy == 1]
+  generate `concatMap` [-r .. r]
+  where
+    generate dx =
+      let ady = r - abs dx
+       in if ady == 0
+            then [(x + dx, y)]
+            else [(x + dx, y + dy) | dy <- [-ady, ady]]
 
 neighbors1 :: Coord2 -> [Coord2]
 neighbors1 = neighbors 1

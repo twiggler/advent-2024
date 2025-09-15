@@ -100,7 +100,7 @@ main = do
   (mazeFile : _) <- getArgs
   maze <- loadMaze mazeFile
 
-  case either error solve maze of
+  case solve maze of
     Nothing -> putStrLn "No solution found"
     Just (shortestPathLength, numberOfSittingPlaces) -> do
       putStrLn $ "Found a solution with cost " ++ show shortestPathLength

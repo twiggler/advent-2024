@@ -1,4 +1,4 @@
-module Search (bfs, prune, path, steps) where
+module Search (bfs, prune, pruneAssoc, path, steps) where
 
 import Control.Monad (join)
 import Data.Foldable (foldl')
@@ -20,6 +20,9 @@ bfs next start' = go (S.singleton start') (HL.singleton start' Nothing)
 
 prune :: (n -> [n]) -> (n -> Bool) -> (n -> [n])
 next `prune` pred' = filter (not . pred') <$> next
+
+pruneAssoc :: (n -> [(n, c)]) -> ((n, c) -> Bool) -> (n -> [(n, c)])
+next `pruneAssoc` pred' = filter (not . pred') <$> next
 
 path :: (Eq n, Hashable n) => HashMap n (Maybe n) -> n -> [n]
 path spt = reverse . go
