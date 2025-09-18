@@ -11,12 +11,12 @@ module AxisAligned
 where
 
 import Cursor (CardinalDir (..))
-import Data.Bifunctor qualified as BF (second)
+import Data.Bifunctor qualified as BF
 import Data.Functor ((<&>))
 import Data.IntMap.Strict (IntMap)
-import Data.IntMap.Strict qualified as IM (adjust, fromListWith, insertWith, lookup, toList)
+import Data.IntMap.Strict qualified as IM
 import Data.IntSet (IntSet)
-import Data.IntSet qualified as IS (delete, lookupGT, lookupLT, singleton, union, toList)
+import Data.IntSet qualified as IS
 import Data.Tuple (swap)
 
 type Coord2 = (Int, Int)

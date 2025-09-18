@@ -8,10 +8,10 @@ import Data.Foldable (asum)
 import Data.Functor
 import Data.List (find)
 import Data.List.NonEmpty (NonEmpty ((:|)), toList)
-import Data.List.NonEmpty qualified as Ne (last)
+import Data.List.NonEmpty qualified as NE
 import Data.Maybe (mapMaybe)
 import Data.Set (Set)
-import Data.Set qualified as Set
+import Data.Set qualified as S
 import Parsing (eol, parseFileWith)
 import System.Environment
 import Text.ParserCombinators.ReadP
@@ -100,7 +100,7 @@ patrol :: World -> NonEmpty World
 -- Track the guard position and direction using a Set to terminate at cycles.
 -- The cycle check could also be done outside of simulate.
 -- This would make it easier to to determine the cause of termination. 
-patrol world = world :| evalState (unfoldM (runMaybeT . go) world) Set.empty
+patrol world = world :| evalState (unfoldM (runMaybeT . go) world) S.empty
   where
     go :: World -> MaybeT (State (Set Guard)) (World, World)
     go w0 = do
@@ -108,10 +108,10 @@ patrol world = world :| evalState (unfoldM (runMaybeT . go) world) Set.empty
       guard' <- liftMaybe $ guard w1
 
       seen <- St.get
-      if guard' `Set.member` seen
+      if guard' `S.member` seen
         then mzero
         else do
-          St.put $ Set.insert guard' seen
+          St.put $ S.insert guard' seen
           return (w1, w1)
 
 solve1 :: NonEmpty World -> Int
@@ -121,7 +121,7 @@ solve2 :: NonEmpty World -> Int
 solve2 =  length . mapMaybe tryCaptureGuard . obstaclePositions
   where
     obstaclePositions = nubOrdOn (fmap position . guard) . tail . toList
-    tryCaptureGuard = guard <=< step . Ne.last . patrol . setupWorld
+    tryCaptureGuard = guard <=< step . NE.last . patrol . setupWorld
     setupWorld (World g d) =
       let d' = turnRight $ turnRight d
           g' = moveGrid (toDir d') $ placeObstacle g

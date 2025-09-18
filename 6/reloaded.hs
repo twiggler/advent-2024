@@ -3,11 +3,11 @@ import Control.Monad (join)
 import Cursor (CardinalDir (..))
 import Data.Containers.ListUtils (nubOrdOn)
 import Data.Functor (($>), (<&>))
-import Data.List qualified as L (drop, find, nub, unfoldr, zip, zipWith)
+import Data.List qualified as L
 import Data.List.NonEmpty (NonEmpty ((:|)))
-import Data.List.NonEmpty qualified as NE (last, tail, toList)
+import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
-import Data.Set qualified as S (empty, insert, member)
+import Data.Set qualified as S
 import Parsing (grid, parseFileWith)
 import System.Environment (getArgs)
 import Text.ParserCombinators.ReadP (ReadP, char, choice, eof)
@@ -61,7 +61,7 @@ patrol start' cm =
 solve1 :: Lab -> [Coord2Dir]
 solve1 (Lab start' bounds' aam) =
   let jumps = patrol start' aam
-      moves = concat $ L.zipWith lerp (NE.toList jumps) (NE.tail jumps)
+      moves = concat $ zipWith lerp (NE.toList jumps) (NE.tail jumps)
       toEdge = runToEdge (NE.last jumps)
    in moves ++ toEdge
   where
@@ -76,8 +76,8 @@ isCycle = go S.empty
 
 solve2 :: Lab -> [Coord2Dir] -> Int
 solve2 (Lab _ _ axesMaps) path =
-  let candidatePositions = L.drop 1 path <&> toCoord2
-      scenarios = nubOrdOn snd (L.zip path candidatePositions)
+  let candidatePositions = drop 1 path <&> toCoord2
+      scenarios = nubOrdOn snd (zip path candidatePositions)
    in length $ filter (isCycle . NE.toList) (uncurry go <$> scenarios)
   where
     go start' (ox, oy) =

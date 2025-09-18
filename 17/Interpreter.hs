@@ -11,16 +11,16 @@ where
 
 import Control.Comonad (extract)
 import Control.Comonad.Store (Store)
-import Control.Comonad.Store qualified as S (ComonadStore (seeks), seek, store)
+import Control.Comonad.Store qualified as S
 import Control.Monad (when)
 import Control.Monad.State.Lazy (State, evalState)
-import Control.Monad.State.Lazy qualified as St (gets, modify')
+import Control.Monad.State.Lazy qualified as St
 import Control.Monad.Writer.Lazy (WriterT, execWriterT)
-import Control.Monad.Writer.Lazy qualified as W (MonadWriter (tell))
+import Control.Monad.Writer.Lazy qualified as W
 import Data.Finite (getFinite)
 import Data.Maybe (isJust)
 import Data.Vector ((!?))
-import Data.Vector qualified as V (fromList)
+import Data.Vector qualified as V
 import Instruction (adv, bdv, bst, bxc, bxl, cdv, jnz, out)
 import Machine
 

@@ -1,11 +1,11 @@
 import Cursor (CardinalDir (East), toDir, toVector2)
 import Data.Array ((!))
 import Data.Containers.ListUtils (nubOrdOn)
-import Data.List qualified as L (filter, foldl', length, zip)
+import Data.List qualified as L
 import Data.Map.Strict (Map)
-import Data.Map.Strict qualified as M (empty, findWithDefault, insert, lookup, notMember)
+import Data.Map.Strict qualified as M
 import Data.Maybe (mapMaybe)
-import Data.OrdPSQ qualified as PQ (minView, singleton)
+import Data.OrdPSQ qualified as PQ
 import Maze (Cell (..), Coord2, Maze (..), MazeArray, loadMaze, upsert)
 import Safe (minimumMay)
 import System.Environment (getArgs)
@@ -66,9 +66,9 @@ dijkstra maze source =
            in go updatedQueue spt'
       where
         nextWithCosts source' cumCost =
-          let nextStates = L.filter (`M.notMember` spt) (next maze source')
+          let nextStates = filter (`M.notMember` spt) (next maze source')
               costs = (\target -> cumCost + travelCost source' target) <$> nextStates
-           in (nextStates `L.zip` costs)
+           in (nextStates `zip` costs)
 
         updateQueue source' queue' (dest, cost') =
           upsert (cost', [source']) upd dest queue'
@@ -85,7 +85,7 @@ solve (Maze cells' start' end') = do
   (minCost, endNodes) <- cheapestNodesByPos spt end'
   let paths = dfs (preds <$> spt) endNodes
 
-  return (minCost, (L.length . nubOrdOn pos) paths)
+  return (minCost, (length . nubOrdOn pos) paths)
   where
     -- Because direction is part of the node, finding the cheapest end nodes is a bit involved
     cheapestNodesByPos spt pos' = do

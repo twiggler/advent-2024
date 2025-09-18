@@ -2,13 +2,13 @@ import AxisAligned (AlignedAxisMaps, Coord2, addCoord, castRay, coords, makeAlig
 import Control.Monad (guard, join)
 import Cursor (CardinalDir (..))
 import Data.Array (Array, (!), (//))
-import Data.Array qualified as A (assocs, listArray)
+import Data.Array qualified as A
 import Data.Containers.ListUtils (nubOrd)
 import Data.Functor (($>))
-import Data.List qualified as L (concatMap, cycle, find, foldl', partition, takeWhile, transpose, unionBy, zip)
+import Data.List qualified as L
 import Data.Maybe (fromJust, fromMaybe)
 import Data.Set (Set)
-import Data.Set qualified as S (fromList, notMember)
+import Data.Set qualified as S
 import Parsing (eol, grid, parseFileWith)
 import System.Environment (getArgs)
 import Text.ParserCombinators.ReadP (ReadP, char, choice, eof)
@@ -57,7 +57,7 @@ makeWarehouse width cells =
 makeWideWarehouse :: Int -> [[Cell]] -> WarehouseW
 makeWideWarehouse width cells =
   let bound = (width * 2 - 1, length cells - 1)
-      wideCells = L.concatMap toWideCell <$> cells
+      wideCells = concatMap toWideCell <$> cells
       grid' = A.listArray ((0, 0), bound) (join $ L.transpose wideCells)
       startPos = (fst . fromJust) $ L.find (\(_, c) -> c == StartW) (A.assocs grid')
    in WideWarehouse startPos (grid' // [(startPos, EmptyW)])
@@ -108,8 +108,8 @@ simulateW moves start = L.foldl' (\house dir -> fromMaybe house (move dir house)
     moveVertical dy (WideWarehouse (x, y) grid') = do
       guard $ grid' ! (x, y + dy) /= WallW -- Check robot does not hit a wall
       boxes' <- boxes grid' dy [(x - 1, y + dy), (x, y + dy)]
-      let boxU = L.concatMap (\(bx, by) -> boxUpdates (bx, by + dy)) boxes'
-          emptyU = L.concatMap emptyUpdates boxes'
+      let boxU = concatMap (\(bx, by) -> boxUpdates (bx, by + dy)) boxes'
+          emptyU = concatMap emptyUpdates boxes'
           -- Union with box positions which remain empty after the move
           updates = L.unionBy (\(p1, _) (p2, _) -> p1 == p2) boxU emptyU
       return $ WideWarehouse (x, y + dy) (grid' // updates)
@@ -123,12 +123,12 @@ simulateW moves start = L.foldl' (\house dir -> fromMaybe house (move dir house)
           where
             (x', y') = (x + dx, y)
             boxes' = [x' + dx, x' + 2 * dx .. emptyX]
-            boxU = [((bx, y), w) | (bx, w) <- boxes' `L.zip` L.cycle ws]
+            boxU = [((bx, y), w) | (bx, w) <- boxes' `zip` cycle ws]
             updates = ((x', y'), EmptyW) : boxU
         Nothing -> Nothing
       where
         row = [lookupCellW grid' (wx, y) | wx <- [x + dx, x + 2 * dx ..]]
-        maybeEmptyX = fst . fst <$> L.find isEmptyW (L.takeWhile (not . isWallW) row)
+        maybeEmptyX = fst . fst <$> L.find isEmptyW (takeWhile (not . isWallW) row)
 
 boxGpsSum :: Int -> Warehouse -> Int
 boxGpsSum dim (Warehouse _ am _) =

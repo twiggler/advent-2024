@@ -32,9 +32,9 @@ solve2 dim byteCoords =
   let allByteCoords = S.fromList [(x, y) | x <- [0 .. dim], y <- [0 .. dim]]
       initialByteCoords = S.difference allByteCoords (S.fromList byteCoords)
       initialMemorySpace = foldr addMemoryCell D.empty initialByteCoords
-      reverseCoords = L.reverse byteCoords
+      reverseCoords = reverse byteCoords
       disjointSets = scanl (flip addMemoryCell) initialMemorySpace reverseCoords
-      timeline = reverseCoords `L.zip` L.drop 1 disjointSets
+      timeline = reverseCoords `zip` drop 1 disjointSets
    in fst <$> L.find (D.equivalent (0, 0) (dim, dim) . snd) timeline
   where
     neighborUnion byte neighbor ds =
@@ -49,7 +49,7 @@ main = do
   let (dim, prefix) = (read dimStr :: Int, read prefixStr :: Int)
 
   positions <- parseFileWith bytePositions mazeFile
-  case solve1 dim (L.take prefix positions) of
+  case solve1 dim (take prefix positions) of
     Just path -> putStrLn $ "Found a path of length " ++ show (length path)
     Nothing -> putStrLn "No path found."
   case solve2 dim positions of

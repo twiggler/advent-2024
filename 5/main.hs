@@ -1,8 +1,8 @@
 import Data.Graph.Inductive.Graph (mkUGraph)
 import Data.Graph.Inductive.PatriciaTree (Gr)
 import Data.Graph.Inductive.Query.DFS (topsort)
-import Data.IntMap.Strict qualified as Map (IntMap, fromList, lookup)
-import Data.IntSet qualified as Set (fromList, member)
+import Data.IntMap.Strict qualified as Map
+import Data.IntSet qualified as Set
 import Data.List (partition)
 import Data.Maybe (fromMaybe, mapMaybe)
 import Parsing (eol, number, parseFileWith)

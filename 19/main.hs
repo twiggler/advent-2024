@@ -1,14 +1,14 @@
 import Algorithm.Search (dfs)
-import Data.Bifunctor qualified as BF (second)
+import Data.Bifunctor qualified as BF
 import Data.ByteString (ByteString)
-import Data.ByteString.Char8 qualified as B (length, null, pack)
+import Data.ByteString.Char8 qualified as B
 import Data.Foldable (foldl')
 import Data.IntMap (IntMap)
-import Data.IntMap qualified as M (empty, insert, lookup)
+import Data.IntMap qualified as M
 import Data.Maybe (mapMaybe)
-import Data.OrdPSQ qualified as PQ (minView, singleton)
+import Data.OrdPSQ qualified as PQ
 import Data.Trie (Trie)
-import Data.Trie qualified as T (fromList, matches)
+import Data.Trie qualified as T
 import Maze (upsert)
 import Parsing (eol, parseFileWith)
 import System.Environment (getArgs)
