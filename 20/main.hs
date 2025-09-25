@@ -1,4 +1,4 @@
-import Data.HashMap.Lazy ((!))
+import Data.HashMap.Lazy ((!?))
 import Maze
   ( Coord2,
     Maze (..),
@@ -13,8 +13,8 @@ import System.Environment (getArgs)
 -- In retrospect, this solution is more complex than required.
 -- The puzzle states "there is only a single path from the start to the end",
 -- which should be interpreted as there *being no dead ends*. So the puzzle input is never a maze.
--- Cheats therefore basically always end at this single path.
--- Oh well, the solution is still quite efficient.
+-- Cheats therefore always end at this single path.
+-- The solution is still quite efficient though.
 solve :: Int -> Int -> Maze -> Int
 solve efficiencyThreshold cheatRadius (Maze cells' start' end') =
   let spt = bfs (neighbors1 `prune` isWall cells') end'
@@ -27,8 +27,9 @@ solve efficiencyThreshold cheatRadius (Maze cells' start' end') =
     cheat' = cheat cheatRadius `pruneAssoc` (isWall cells' . fst)
 
     savingsAtPos stepsToEnd (pos, cost) =
-      [ cost - ((stepsToEnd ! cheatPos) + cheatCost)
-        | (cheatPos, cheatCost) <- cheat' pos
+      [ cost - (stepsToEnd' + cheatCost)
+        | (cheatPos, cheatCost) <- cheat' pos,
+          Just stepsToEnd' <- [stepsToEnd !? cheatPos]
       ]
 
 cheat :: Int -> Coord2 -> [(Coord2, Int)]
