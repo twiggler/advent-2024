@@ -232,3 +232,10 @@ executable 21
                       containers ^>=0.7
     hs-source-dirs:   21
     default-language: Haskell2010
+
+executable 22
+    import:           warnings
+    main-is:          main.hs
+    build-depends:    advent2025
+    hs-source-dirs:   22
+    default-language: Haskell2010
