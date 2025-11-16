@@ -1,8 +1,6 @@
-import Control.Monad (guard, join, replicateM, (>=>))
+import Control.Monad (foldM, guard, join, replicateM, (>=>))
 import Control.Monad.Extra (liftMaybe)
 import Control.Monad.Reader (Reader, ask, runReader)
-import Control.Monad.State (StateT, evalStateT, get, put)
-import Control.Monad.Trans (lift)
 import Control.Monad.Trans.Maybe (MaybeT, runMaybeT)
 import Data.Bits (Bits (..), shiftL)
 import Data.Bool (bool)
@@ -65,13 +63,12 @@ data TestCase = TestCase
   { testOutput :: FruitNodeLabel,
     inputsX :: [FruitNodeLabel],
     inputsY :: [FruitNodeLabel],
-    fixtures :: [TestVector]
+    testVectors :: [TestVector]
   }
   deriving (Show, Eq)
 
-type PatchCircuitM = StateT FruitMonitorGraph []
-
 hasCycle :: (G.Graph gr) => gr a b -> Bool
+-- A graph has a cycle if any of its strongly connected components has more than one node.
 hasCycle g = not (all isSingleton (G.scc g))
   where
     isSingleton :: [a] -> Bool
@@ -155,6 +152,7 @@ mkFruitMonitorGraph (sourceAssocValue, gates) = do
       label <- case group of
         'z' -> Just $ Sink index
         _ -> Nothing
+      -- Distinguish sink node (Right wire) from gate node (Left wire)
       return (Right wire, label)
 
     producingEdge nodeByWire gate = do
@@ -169,18 +167,13 @@ mkFruitMonitorGraph (sourceAssocValue, gates) = do
       let gateNode = nodeByWire ! Left gateOutput
       return (gateNode, sinkNode, gateOutput)
 
-reorderEnds :: [a] -> [a]
-reorderEnds xs =
+outsideIn :: [a] -> [a]
+-- Example: [1,2,3,4,5] -> [1,5,2,4,3]
+outsideIn xs =
   let n = length xs
       k = (n + 1) `div` 2
       (front, back) = splitAt k xs
-      revBack = reverse back
-   in interleave front revBack
-  where
-    interleave :: [a] -> [a] -> [a]
-    interleave (x : xs') (y : ys') = x : y : interleave xs' ys'
-    interleave xs' [] = xs' -- For odd-length lists, the front part will be longer
-    interleave [] ys' = ys' -- For completeness, though not hit in this case
+   in concat $ L.transpose [front, reverse back]
 
 simulateLogicGate :: Operation -> FruitNodeLabel -> FruitNodeLabel -> FruitMonitor -> FruitMonitorM Bool
 simulateLogicGate op input1' input2' monitor = do
@@ -193,6 +186,7 @@ simulateLogicGate op input1' input2' monitor = do
 
 mkFruitMonitor :: FruitMonitorGraph -> Maybe FruitMonitor
 mkFruitMonitor gr =
+  -- Note: hasCycle does not detect self-loops
   guard (not (hasCycle gr) && G.isSimple gr) >> monitor
   where
     monitor = M.fromList <$> traverse (step . G.context gr) (G.nodes gr)
@@ -214,6 +208,7 @@ mkFruitMonitor gr =
     simulateLogicGate' _ _ = Nothing
 
     sinkFromNode :: [FruitNodeLabel] -> Maybe (FruitMonitorM Bool)
+    -- Top level Maybe to short-circuit invalid graphs
     sinkFromNode [backingGate] = Just $ join $ liftMaybe monitor >>= liftMaybe . M.lookup backingGate
     sinkFromNode _ = Nothing
 
@@ -231,7 +226,7 @@ mkTestCases gr = case indices of
     indices = L.sortOn Down $ [index | (_, Sink index) <- G.labNodes gr]
 
     mkTestCase outputIndex activeIndices =
-      let fixtures' =
+      let testVectors' =
             [ TestVector x' y' z'
               | x' <- inputs activeIndices,
                 y' <- inputs activeIndices,
@@ -241,7 +236,7 @@ mkTestCases gr = case indices of
             { testOutput = Sink outputIndex,
               inputsX = Source X <$> activeIndices,
               inputsY = Source Y <$> activeIndices,
-              fixtures = fixtures'
+              testVectors = testVectors'
             }
 
     inputs :: [Int] -> [Int]
@@ -250,8 +245,8 @@ mkTestCases gr = case indices of
         | bs <- replicateM (length indices') [False, True]
       ]
 
-testCaseError :: TestCase -> NodeMap -> FruitMonitorGraph -> Maybe Int
-testCaseError (TestCase testOutput' inputsX' inputsY' fixtures') nodeMap gr = do
+runTestCase :: TestCase -> NodeMap -> FruitMonitorGraph -> Maybe Int
+runTestCase (TestCase testOutput' inputsX' inputsY' fixtures') nodeMap gr = do
   monitor <- mkFruitMonitor gr
   sum <$> traverse (runTestVector monitor) fixtures'
   where
@@ -266,17 +261,13 @@ testCaseError (TestCase testOutput' inputsX' inputsY' fixtures') nodeMap gr = do
       outputValue <- runReader (runMaybeT outputValueM) (M.union inputValues zeroInput)
       return $ if outputValue /= expectedZ' then 1 else 0
 
-patchCircuitForTestCase :: NodeMap -> TestCase -> PatchCircuitM [(Wire, Wire)]
-patchCircuitForTestCase nodeMap testCase = do
-  gr <- get
+patchForTestCase :: NodeMap -> FruitMonitorGraph -> TestCase -> [FruitMonitorGraph]
+patchForTestCase nodeMap gr testCase =
   if found gr
-    then return []
-    else do
-      candidate <- lift $ L.filter found (next gr)
-      put candidate
-      return $ liftMaybe $ swappedWires gr candidate
+    then [gr]
+    else L.filter found next
   where
-    next gr = fromMaybe [] $ do
+    next = fromMaybe [] $ do
       inputNodes <- traverse (nodeMap !?) (inputsX testCase ++ inputsY testCase)
       outputNode <- nodeMap !? testOutput testCase
       return $
@@ -288,23 +279,23 @@ patchCircuitForTestCase nodeMap testCase = do
             Gate _ _ <- [wire2]
         ]
 
-    found = (== Just 0) . testCaseError testCase nodeMap
+    found = (== Just 0) . runTestCase testCase nodeMap
 
-    -- The path returned by dfs is in terms of graphs.
-    swappedWires :: FruitMonitorGraph -> FruitMonitorGraph -> Maybe (Wire, Wire)
-    -- Although only two wires are swapped, they may connect to multiple destinations.
-    swappedWires gr1 gr2 = case S.toList $ G.edgeLabel `S.map` diff of
-      [fromWire, toWire] -> Just (fromWire, toWire)
-      _ -> Nothing
-      where
-        diff = S.fromList (G.labEdges gr1) `S.difference` S.fromList (G.labEdges gr2)
-
-generatePatchLog :: (FruitMonitorGraph, InitialInputValues) -> Maybe [(Wire, Wire)]
-generatePatchLog (gr, _) =
+-- Returns the list of wires that were swapped to patch the circuit.
+-- Wire pairs can be found using a monadic version of `mapAccum` if needed.
+crossedWires :: (FruitMonitorGraph, InitialInputValues) -> Maybe [Wire]
+crossedWires (gr, _) =
   let testCases = mkTestCases gr
       nodeMap = M.fromList $ swap <$> G.labNodes gr
-      search = traverse (patchCircuitForTestCase nodeMap) (reorderEnds testCases)
-   in concat <$> listToMaybe (evalStateT search gr)
+      -- Sandwich testcases because the search set is smallest at the edges.
+      search = foldM (patchForTestCase nodeMap) gr (outsideIn testCases)
+   in swappedWires <$> listToMaybe search
+  where
+    -- Diff graphs to find which wires were swapped.
+    swappedWires :: FruitMonitorGraph -> [Wire]
+    swappedWires gr2 =
+      let diff = S.fromList (G.labEdges gr) `S.difference` S.fromList (G.labEdges gr2)
+       in S.toList $ G.edgeLabel `S.map` diff
 
 solve1 :: InitialState -> Maybe Int
 solve1 initialState = do
@@ -313,10 +304,10 @@ solve1 initialState = do
   runReader (runMaybeT $ sinks fruitMonitor) initialValues
 
 solve2 :: InitialState -> Maybe String
-solve2 = mkFruitMonitorGraph >=> generatePatchLog >=> swappedWires
+solve2 = mkFruitMonitorGraph >=> crossedWires >=> sortWires
   where
-    swappedWires :: [(Wire, Wire)] -> Maybe String
-    swappedWires = Just . L.intercalate "," . L.sort . concatMap (\(w1, w2) -> [w1, w2])
+    sortWires :: [Wire] -> Maybe String
+    sortWires = Just . L.intercalate "," . L.sort
 
 main :: IO ()
 main = do
