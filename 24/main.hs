@@ -17,7 +17,6 @@ import Data.Maybe (fromMaybe, listToMaybe, mapMaybe)
 import Data.Ord (Down (Down))
 import Data.Set qualified as S
 import Data.Tuple (swap)
-import Debug.Trace qualified as Debug
 import Parsing (eol, parseFileWith)
 import System.Environment (getArgs)
 import Text.ParserCombinators.ReadP (ReadP, (+++))
@@ -170,6 +169,19 @@ mkFruitMonitorGraph (sourceAssocValue, gates) = do
       let gateNode = nodeByWire ! Left gateOutput
       return (gateNode, sinkNode, gateOutput)
 
+reorderEnds :: [a] -> [a]
+reorderEnds xs =
+  let n = length xs
+      k = (n + 1) `div` 2
+      (front, back) = splitAt k xs
+      revBack = reverse back
+   in interleave front revBack
+  where
+    interleave :: [a] -> [a] -> [a]
+    interleave (x : xs') (y : ys') = x : y : interleave xs' ys'
+    interleave xs' [] = xs' -- For odd-length lists, the front part will be longer
+    interleave [] ys' = ys' -- For completeness, though not hit in this case
+
 simulateLogicGate :: Operation -> FruitNodeLabel -> FruitNodeLabel -> FruitMonitor -> FruitMonitorM Bool
 simulateLogicGate op input1' input2' monitor = do
   inputValue1 <- liftMaybe $ monitor !? input1'
@@ -256,14 +268,12 @@ testCaseError (TestCase testOutput' inputsX' inputsY' fixtures') nodeMap gr = do
 
 patchCircuitForTestCase :: NodeMap -> TestCase -> PatchCircuitM [(Wire, Wire)]
 patchCircuitForTestCase nodeMap testCase = do
-  Debug.traceM $ "Entering testcase: " ++ show (testOutput testCase)
   gr <- get
   if found gr
     then return []
     else do
       candidate <- lift $ L.filter found (next gr)
       put candidate
-      Debug.traceM $ "Swapped wires: " ++ show (swappedWires gr candidate)
       return $ liftMaybe $ swappedWires gr candidate
   where
     next gr = fromMaybe [] $ do
@@ -271,9 +281,9 @@ patchCircuitForTestCase nodeMap testCase = do
       outputNode <- nodeMap !? testOutput testCase
       return $
         [ swapOutputWires gr node1 node2
-          | (node1, wire1) <- G.dfsWith G.labNode' inputNodes gr,
+          | (node1, wire1) <- G.bfsnWith G.labNode' inputNodes gr,
             Gate _ _ <- [wire1],
-            (node2, wire2) <- G.xdfsWith G.pre' G.labNode' [outputNode] gr,
+            (node2, wire2) <- G.bfsWith G.labNode' outputNode (G.grev gr),
             node1 /= node2,
             Gate _ _ <- [wire2]
         ]
@@ -293,7 +303,7 @@ generatePatchLog :: (FruitMonitorGraph, InitialInputValues) -> Maybe [(Wire, Wir
 generatePatchLog (gr, _) =
   let testCases = mkTestCases gr
       nodeMap = M.fromList $ swap <$> G.labNodes gr
-      search = traverse (patchCircuitForTestCase nodeMap) testCases
+      search = traverse (patchCircuitForTestCase nodeMap) (reorderEnds testCases)
    in concat <$> listToMaybe (evalStateT search gr)
 
 solve1 :: InitialState -> Maybe Int
