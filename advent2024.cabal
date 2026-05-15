@@ -1,5 +1,5 @@
 cabal-version:   3.8
-name:            advent2025
+name:            advent2024
 version:         0.1.0.0
 license:         NONE
 author:          12800443+twiggler@users.noreply.github.com
@@ -45,7 +45,7 @@ executable 2
 executable 3
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025
+    build-depends:    advent2024
     hs-source-dirs:   3
 
 executable 4
@@ -58,7 +58,7 @@ executable 5
     main-is:          main.hs
     build-depends:    containers ^>=0.7,  
                       fgl ^>=5.8.3.0,
-                      advent2025  
+                      advent2024  
     hs-source-dirs:   5
 
 executable 6
@@ -70,21 +70,21 @@ executable 6
                       mtl ^>=2.3.1,
                       transformers ^>=0.6.1.0,
                       comonad ^>=5.0.9,
-                      advent2025
+                      advent2024
     hs-source-dirs:   6
 
 executable 6-reloaded
     import:           base-settings
     main-is:          reloaded.hs
     build-depends:    containers ^>=0.7,
-                      advent2025,
+                      advent2024,
     hs-source-dirs:   6
 
 executable 7
     import:           base-settings
     main-is:          main.hs
     build-depends:    integer-logarithms ^>=1.0.4,
-                      advent2025
+                      advent2024
     hs-source-dirs:   7
 
 executable 8
@@ -92,7 +92,7 @@ executable 8
     main-is:          main.hs
     build-depends:    containers ^>=0.7,
                       linear ^>=1.23.1,
-                      advent2025
+                      advent2024
     hs-source-dirs:   8
 
 executable 9
@@ -100,7 +100,7 @@ executable 9
     main-is:          main.hs
     build-depends:    containers ^>=0.7,
                       mtl ^>=2.3.1,
-                      advent2025
+                      advent2024
     hs-source-dirs:   9
 
 executable 10
@@ -108,14 +108,14 @@ executable 10
     main-is:          main.hs
     build-depends:    comonad ^>=5.0.9,
                       containers ^>=0.7,
-                      advent2025
+                      advent2024
     hs-source-dirs:   10
 
 executable 11
     import:           base-settings
     main-is:          main.hs
     build-depends:    integer-logarithms ^>=1.0.4,
-                      advent2025,
+                      advent2024,
                       vector-sized ^>=1.6.1,
                       finite-typelits ^>=0.2.1.0,
     hs-source-dirs:   11
@@ -125,19 +125,19 @@ executable 12
     main-is:          main.hs
     build-depends:    fgl ^>=5.8.3.0,
                       comonad ^>=5.0.9,
-                      advent2025
+                      advent2024
     hs-source-dirs:   12
 
 executable 13
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025
+    build-depends:    advent2024
     hs-source-dirs:   13
 
 executable 14
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025,
+    build-depends:    advent2024,
                       linear ^>=1.23.1,
                       ansi-terminal ^>=1.1.2,
     hs-source-dirs:   14
@@ -145,7 +145,7 @@ executable 14
 executable 15
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025,
+    build-depends:    advent2024,
                       containers ^>=0.7,
                       array ^>=0.5.6.0
     hs-source-dirs:   15
@@ -157,7 +157,7 @@ executable 16
                       array ^>=0.5.6.0,
                       containers ^>=0.7,
                       safe ^>=0.3.21,
-                      advent2025
+                      advent2024
     hs-source-dirs:   16
 
 executable 17
@@ -167,7 +167,7 @@ executable 17
                       Interpreter,
                       Parser,
                       Instruction
-    build-depends:    advent2025,
+    build-depends:    advent2024,
                       finite-typelits ^>=0.2.1.0,
                       vector ^>=0.12.0.1,
                       comonad ^>=5.0.9, 
@@ -179,7 +179,7 @@ executable 17
 executable 18
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025,
+    build-depends:    advent2024,
                       array ^>=0.5.6.0,
                       search-algorithms ^>=0.3.3,
                       containers ^>=0.7,
@@ -189,7 +189,7 @@ executable 18
 executable 19
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025,
+    build-depends:    advent2024,
                       psqueues ^>=0.2.8.1,
                       search-algorithms ^>=0.3.3,
                       bytestring ^>=0.11.5.3,
@@ -200,21 +200,21 @@ executable 19
 executable 20
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025,
+    build-depends:    advent2024,
                       unordered-containers ^>=0.2.20
     hs-source-dirs:   20
 
 executable 21
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025,
+    build-depends:    advent2024,
                       containers ^>=0.7
     hs-source-dirs:   21
 
 executable 22
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025,
+    build-depends:    advent2024,
                       unordered-containers ^>=0.2.20,
                       split ^>=0.2.5
     hs-source-dirs:   22
@@ -222,7 +222,7 @@ executable 22
 executable 23
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025,
+    build-depends:    advent2024,
                       containers ^>=0.7,  
                       fgl ^>=5.8.3.0,
                       safe ^>=0.3.21
@@ -231,7 +231,7 @@ executable 23
 executable 24
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025,
+    build-depends:    advent2024,
                       containers ^>=0.7,
                       fgl ^>=5.8.3.0,
                       mtl ^>=2.3.1,
@@ -242,5 +242,5 @@ executable 24
 executable 25
     import:           base-settings
     main-is:          main.hs
-    build-depends:    advent2025
+    build-depends:    advent2024
     hs-source-dirs:   25
